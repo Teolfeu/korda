@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const cli = fileURLToPath(new URL("../../bin/korda", import.meta.url));
+const env = { ...process.env };
+let stopping = false;
+let active;
+
+function run(args) {
+  return new Promise((resolve, reject) => {
+    active = spawn(process.execPath, [cli, ...args], { env, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    active.stdout.on("data", (chunk) => { stdout += chunk; });
+    active.stderr.on("data", (chunk) => { stderr += chunk; });
+    active.once("error", reject);
+    active.once("exit", (code, signal) => {
+      active = undefined;
+      if (stopping && signal) return resolve("");
+      if (code !== 0) return reject(new Error(stderr.trim() || `korda saiu com código ${code}`));
+      resolve(stdout.trim());
+    });
+  });
+}
+
+function stop() {
+  stopping = true;
+  active?.kill("SIGTERM");
+}
+
+process.on("SIGTERM", stop);
+process.on("SIGINT", stop);
+
+async function main() {
+  for (const name of ["KORDA_NODE_ID", "KORDA_SPOOL", "KORDA_TOKEN"]) {
+    if (!env[name]) throw new Error(`${name} ausente`);
+  }
+  process.stdout.write("READY\n");
+  while (!stopping) {
+    const inbox = await run(["inbox"]);
+    const requests = [...inbox.matchAll(/(?:^|\n\n)\[([0-9a-f-]{36})\] de [^\n]*\n([\s\S]*?)(?=\n\n\[[0-9a-f-]{36}\] de |$)/g)];
+    for (const [, id, prompt] of requests) {
+      if (stopping) break;
+      await run(["reply", id, `fake-ok: ${prompt.trim()}`]);
+    }
+    if (!requests.length) await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+main().catch((error) => {
+  if (!stopping) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  }
+});

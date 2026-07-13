@@ -1,0 +1,60 @@
+# Dependencies and caches
+node_modules/
+**/node_modules/
+.npm-cache/
+**/.npm-cache/
+.vite/
+**/.vite/
+coverage/
+
+# Local configuration and secrets
+.npmrc
+**/.npmrc
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.sqlite
+*.sqlite3
+*.db
+
+# Builds and packages
+dist/
+**/dist/
+release/
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.zip
+
+# Private Korda runtime
+.korda-runtime-*
+.korda-write-*
+
+# Separate public site and internal development evidence
+site/
+AGENTS.md
+KORDA-DEVELOPMENT-HANDOFF.md
+design-reference.png
+design-qa.md
+design-audit/
+qa-*
+promo-video/
+public/brand/korda-mark-master.png
+public/brand/korda-mark-source.png
+public/korda-mark.png
+
+# Logs, crash dumps and editor files
+*.log
+npm-debug.log*
+*.dmp
+core
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/

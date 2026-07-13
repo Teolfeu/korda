@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import http from "node:http";
+import path from "node:path";
+
+const [, , command, ...rawArgs] = process.argv;
+if (!command || ["help", "--help", "-h"].includes(command)) {
+  console.log("korda self | list | browser list|info|navigate|content|screenshot|inspect|activate|fill [browser] [argumento] | run status|approve|finish|fail [mensagem] | ask <agente> <mensagem> | inbox | reply <pedido> <resposta> | wait <pedido> | note read|write <nota> [texto]");
+  process.exit(0);
+}
+
+const stdinIndex = rawArgs.indexOf("--stdin");
+const args = rawArgs.filter((item) => item !== "--stdin");
+if (stdinIndex !== -1) {
+  let input = "";
+  for await (const chunk of process.stdin) input += chunk;
+  args.push(input.trim());
+}
+
+const port = Number(process.env.KORDA_PORT);
+const spoolDir = process.env.KORDA_SPOOL;
+const token = process.env.KORDA_TOKEN;
+const nodeId = process.env.KORDA_NODE_ID;
+if ((!spoolDir && !port) || !token || !nodeId) {
+  console.error("Este terminal não está conectado ao Korda.");
+  process.exit(1);
+}
+
+const body = JSON.stringify({ command, args });
+if (Buffer.byteLength(body) > 64 * 1024) {
+  console.error("Pedido Korda excede o limite permitido.");
+  process.exit(1);
+}
+
+if (spoolDir) {
+  const id = crypto.randomUUID();
+  const requestFile = path.join(spoolDir, `request-${id}.json`);
+  const responseFile = path.join(spoolDir, `response-${id}.json`);
+  const temporary = `${requestFile}.${process.pid}.tmp`;
+  const payload = JSON.stringify({ nodeId, token, command, args });
+  try {
+    await fs.writeFile(temporary, payload, { encoding: "utf8", mode: 0o600, flag: "wx" });
+    await fs.rename(temporary, requestFile);
+    const deadline = Date.now() + (command === "browser" ? 30_000 : 10_000);
+    let response;
+    while (Date.now() < deadline) {
+      try {
+        const stat = await fs.stat(responseFile);
+        if (stat.size > 64 * 1024) throw new Error("Resposta Korda excede o limite permitido.");
+        response = JSON.parse(await fs.readFile(responseFile, "utf8"));
+        break;
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+    }
+    if (!response) throw new Error("Tempo esgotado falando com o Korda.");
+    if (response.error) throw new Error(response.error);
+    if (response.output) await new Promise((resolve) => process.stdout.write(`${response.output}\n`, resolve));
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  } finally {
+    await fs.rm(temporary, { force: true });
+    await fs.rm(requestFile, { force: true });
+    await fs.rm(responseFile, { force: true });
+  }
+  process.exit();
+}
+
+const request = http.request({
+  host: "127.0.0.1",
+  port,
+  path: "/command",
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "content-length": Buffer.byteLength(body),
+    "x-korda-node": nodeId,
+    "x-korda-token": token,
+  },
+}, (response) => {
+  let payload = "";
+  response.setEncoding("utf8");
+  response.on("data", (chunk) => { payload += chunk; });
+  response.on("end", () => {
+    try {
+      const result = JSON.parse(payload);
+      if (response.statusCode >= 400) throw new Error(result.error || "Falha no Korda.");
+      if (result.output) process.stdout.write(`${result.output}\n`);
+    } catch (error) {
+      console.error(error.message);
+      process.exitCode = 1;
+    }
+  });
+});
+request.setTimeout(command === "browser" ? 30_000 : 10_000, () => request.destroy(new Error("Tempo esgotado falando com o Korda.")));
+request.on("error", (error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
+request.end(body);

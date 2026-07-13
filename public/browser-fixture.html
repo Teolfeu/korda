@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
+    <title>Checkout</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 18px; color: #171a1f; background: #fff; font: 13px Inter, system-ui, sans-serif; }
+      h1 { margin: 0 0 12px; font-size: 24px; }
+      nav { display: flex; justify-content: space-between; margin-bottom: 16px; color: #69717b; font-size: 10px; }
+      nav strong { padding: 4px 10px; border-radius: 4px; background: #2868d8; color: #fff; }
+      main { display: grid; grid-template-columns: 1.5fr .9fr; gap: 12px; }
+      section, aside { padding: 12px; border: 1px solid #dde1e6; border-radius: 6px; }
+      label { display: grid; gap: 4px; margin-top: 9px; font-size: 10px; }
+      input { width: 100%; height: 32px; padding: 0 8px; border: 1px solid #d8dde3; border-radius: 4px; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      p, strong.total { display: flex; justify-content: space-between; }
+      button { width: 100%; height: 34px; border: 0; border-radius: 4px; background: #171a1f; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <h1>Checkout</h1>
+    <nav><span>1. Carrinho</span><span>2. Entrega</span><strong>3. Pagamento</strong><span>4. Revisão</span></nav>
+    <main>
+      <section>
+        <b>Pagamento</b>
+        <label>Número do cartão<input value="1234 5678 9012 3456" readonly /></label>
+        <div class="row"><label>Validade<input value="MM / AA" readonly /></label><label>CVC<input value="123" readonly /></label></div>
+      </section>
+      <aside>
+        <b>Resumo do pedido</b>
+        <p><span>Subtotal</span><span>R$ 249,90</span></p>
+        <p><span>Frete</span><span>R$ 15,00</span></p>
+        <strong class="total"><span>Total</span><span>R$ 264,90</span></strong>
+        <button>Finalizar pagamento</button>
+      </aside>
+    </main>
+  </body>
+</html>

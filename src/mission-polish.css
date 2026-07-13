@@ -1,0 +1,18 @@
+.mission-dialog { width: min(620px, 100%); overflow: hidden; }
+.mission-dialog .quick-start-header { position: relative; align-items: center; background: #fafcff; }
+.mission-dialog .quick-start-header > div { min-width: 0; flex: 1; }
+.mission-mark { width: 36px; height: 36px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid #cfe0fa; border-radius: 10px; background: #edf5ff; color: #2868d8; box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .72); }
+.mission-local { display: inline-flex; align-items: center; gap: 4px; padding: 4px 7px; border: 1px solid #d8eadf; border-radius: 999px; background: #f3faf6; color: #387052; font-size: 8px; font-weight: 600; white-space: nowrap; }
+.mission-body { background: #fff; }
+.mission-body > label textarea { transition: border-color .14s ease, box-shadow .14s ease, background-color .14s ease; }
+.mission-body > label textarea:focus { border-color: #8cb7f2; background: #fff; box-shadow: 0 0 0 3px rgba(40, 104, 216, .09); }
+.mission-agents button { position: relative; transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease, background-color .14s ease; }
+.mission-agents button:hover { transform: translateY(-1px); border-color: #b9c9dc; box-shadow: 0 4px 12px rgba(41, 55, 73, .07); }
+.mission-agents button.selected { border-color: #9dc1f2; background: #f3f8ff; box-shadow: inset 3px 0 0 #2868d8; }
+.mission-check { position: absolute; top: 9px; right: 9px; padding: 2px; border-radius: 50%; background: #2868d8; color: #fff; }
+.mission-dialog .quick-start-actions { background: #fafbfd; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-agents button, .mission-body > label textarea { transition: none; }
+  .mission-agents button:hover { transform: none; }
+}

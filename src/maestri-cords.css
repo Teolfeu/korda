@@ -1,0 +1,68 @@
+.gravity-edge.maestri-cord path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.gravity-edge.maestri-cord .gravity-edge-cable {
+  stroke: #9aa0a6;
+  stroke-width: 1.7px;
+  stroke-linecap: round;
+  stroke-dasharray: 7 6;
+  filter: none;
+  transition: stroke .16s ease, stroke-width .16s ease, opacity .16s ease;
+}
+
+.gravity-edge.maestri-cord .gravity-edge-endpoint {
+  fill: #858b92;
+  pointer-events: none;
+  transition: fill .16s ease, r .16s ease;
+  vector-effect: non-scaling-stroke;
+}
+
+.gravity-edge.maestri-cord .gravity-edge-hit {
+  stroke: transparent;
+  stroke-width: 26px;
+  cursor: grab;
+  pointer-events: stroke;
+}
+
+.gravity-edge.maestri-cord:hover .gravity-edge-cable {
+  stroke: #737980;
+  stroke-width: 2px;
+}
+
+.gravity-edge.maestri-cord.is-selected .gravity-edge-cable,
+.gravity-edge.maestri-cord.is-pulling .gravity-edge-cable {
+  stroke: #1677ff;
+  stroke-width: 2px;
+}
+
+.gravity-edge.maestri-cord .gravity-edge-flow {
+  stroke: #1677ff;
+  stroke-width: 2.8px;
+  stroke-linecap: round;
+  stroke-dasharray: 12 34;
+  opacity: .82;
+  pointer-events: none;
+  animation: maestri-cord-flow .9s linear infinite;
+}
+
+.gravity-edge.maestri-cord.is-reverse .gravity-edge-flow { animation-direction: reverse; }
+
+.gravity-edge.maestri-cord.is-selected .gravity-edge-endpoint,
+.gravity-edge.maestri-cord.is-pulling .gravity-edge-endpoint {
+  fill: #1677ff;
+}
+
+.gravity-edge.maestri-cord.is-pulling .gravity-edge-hit { cursor: grabbing; }
+.gravity-edge.maestri-cord .gravity-edge-hit:focus-visible { outline: none; }
+.gravity-edge.maestri-cord:has(.gravity-edge-hit:focus-visible) .gravity-edge-cable {
+  stroke: #1677ff;
+  stroke-width: 2.5px;
+}
+
+@keyframes maestri-cord-flow { to { stroke-dashoffset: -13; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gravity-edge.maestri-cord .gravity-edge-flow { stroke-dasharray: none; animation: none; opacity: .68; }
+}
