@@ -9,8 +9,8 @@ Bancada desktop open source para abrir agentes e terminais locais, conectá-los 
 Baixe o AppImage Linux x86_64 na [última Release](https://github.com/Teolfeu/korda/releases/latest), torne-o executável e abra:
 
 ```bash
-chmod +x Korda-0.1.0-x86_64.AppImage
-./Korda-0.1.0-x86_64.AppImage
+chmod +x Korda-0.1.1-x86_64.AppImage
+./Korda-0.1.1-x86_64.AppImage
 ```
 
 O Korda detecta CLIs já instaladas no computador, como Codex, OpenCode, Hermes, Grok e Claude Code. Essas ferramentas e suas assinaturas não são incluídas no aplicativo.

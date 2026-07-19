@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Alternative dashboard view alongside the canvas.
+- Distinct visual identity for agent roles and a redesigned new-agent dialog.
+- More reliable CLI detection and support for custom terminal commands.
+- Public site link points to the dedicated `korda-site` repository.
+
 ## 0.1.0
 
 - Visual canvas with resizable agents, terminals, notes, text and browser blocks.
