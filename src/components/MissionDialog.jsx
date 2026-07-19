@@ -1,6 +1,25 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Check, Crosshair, Play, Robot, ShieldCheck, X } from "@phosphor-icons/react";
+import { BracketsCurly, Check, Crosshair, Cube, Lightning, Moon, PaperPlaneTilt, Play, Robot, ShieldCheck, Sparkle, StarFour, Wrench, X } from "@phosphor-icons/react";
 import "../mission-polish.css";
+
+// Mesma identidade visual por CLI usada nos nós do canvas (cores --agent-*).
+const cliVisuals = [
+  ["codex", Cube, "#7c3aed"],
+  ["claude", Sparkle, "#c2410c"],
+  ["opencode", BracketsCurly, "#059669"],
+  ["kimi", Moon, "#2563eb"],
+  ["gemini", StarFour, "#0891b2"],
+  ["hermes", PaperPlaneTilt, "#db2777"],
+  ["grok", Lightning, "#334155"],
+  ["aider", Wrench, "#57534e"],
+];
+
+function agentVisual(title) {
+  const haystack = (title || "").toLowerCase();
+  const match = cliVisuals.find(([key]) => haystack.includes(key));
+  const [, Icon = Robot, color = "#2868d8"] = match || [];
+  return { Icon, color };
+}
 
 export function MissionDialog({ open, agents = [], error = "", onClose, onStart }) {
   const dialogRef = useRef(null);
@@ -47,7 +66,7 @@ export function MissionDialog({ open, agents = [], error = "", onClose, onStart 
         <label><span>Objetivo</span><textarea value={objective} onChange={(event) => setObjective(event.target.value)} maxLength={4_000} placeholder="O que o Orquestrador deve entregar?" /></label>
         <label><span>Critério de conclusão</span><textarea value={successCriteria} onChange={(event) => setSuccessCriteria(event.target.value)} maxLength={2_000} placeholder="Ex.: testes passando e revisão aprovada" /></label>
         <div className="mission-options"><label><span>Prazo máximo</span><select value={timeoutMinutes} onChange={(event) => setTimeoutMinutes(Number(event.target.value))}><option value="5">5 minutos</option><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option></select></label><label><span>Revisão</span><select value={reviewerId} onChange={(event) => { const value = event.target.value; setReviewerId(value); if (value) setSelectedIds((current) => [...new Set([...current, value])]); }}><option value="">Sem aprovação obrigatória</option>{reviewers.map((reviewer) => <option key={reviewer.id} value={reviewer.id}>{reviewer.title}</option>)}</select><small>{reviewerId ? "A conclusão exigirá aprovação" : "O Orquestrador poderá concluir diretamente"}</small></label></div>
-        <div className="mission-agents"><span>AGENTES DA MISSÃO</span>{agents.map((agent) => { const selected = selectedIds.includes(agent.id); const locked = agent.role === "orchestrator" || agent.id === reviewerId; return <button type="button" aria-pressed={selected} className={selected ? "selected" : ""} key={agent.id} onClick={() => !locked && setSelectedIds((current) => current.includes(agent.id) ? current.filter((id) => id !== agent.id) : [...current, agent.id])}><Robot size={15} weight="duotone" /><b>{agent.title}</b><small>{agent.roleLabel || agent.role}{locked ? " · obrigatório" : ""}</small>{selected && <Check className="mission-check" size={12} weight="bold" aria-hidden="true" />}</button>; })}</div>
+        <div className="mission-agents"><span>AGENTES DA MISSÃO</span>{agents.map((agent) => { const selected = selectedIds.includes(agent.id); const locked = agent.role === "orchestrator" || agent.id === reviewerId; const { Icon, color } = agentVisual(agent.title); return <button type="button" aria-pressed={selected} className={selected ? "selected" : ""} key={agent.id} onClick={() => !locked && setSelectedIds((current) => current.includes(agent.id) ? current.filter((id) => id !== agent.id) : [...current, agent.id])}><Icon size={15} weight="duotone" style={{ color }} /><b>{agent.title}</b><small>{agent.roleLabel || agent.role}{locked ? " · obrigatório" : ""}</small>{selected && <Check className="mission-check" size={12} weight="bold" aria-hidden="true" />}</button>; })}</div>
         {error && <p className="quick-start-error" role="alert">{error}</p>}
         <footer className="quick-start-actions"><button type="button" onClick={onClose}>Cancelar</button><button type="submit" className="primary" disabled={!canStart}><Play size={13} weight="fill" />Iniciar missão</button></footer>
       </form>

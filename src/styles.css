@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, sans-serif;
   color: #171a1f;
-  background: #f6f7f8;
+  background: #f7f8f5;
   font-synthesis: none;
   --border: #dde1e6;
   --muted: #66707d;
@@ -18,6 +18,20 @@
   --shadow-sm: 0 5px 16px rgba(24, 32, 42, .08);
   --radius-sm: 7px;
   --radius-md: 10px;
+  /* Identidade visual por CLI/tipo de bloco — as mesmas cores usadas nos
+     nós do canvas, nos seletores de agente e no dashboard. */
+  --agent-codex: #7c3aed;
+  --agent-claude: #c2410c;
+  --agent-opencode: #059669;
+  --agent-kimi: #2563eb;
+  --agent-gemini: #0891b2;
+  --agent-hermes: #db2777;
+  --agent-grok: #334155;
+  --agent-aider: #57534e;
+  --agent-shell: #64748b;
+  --agent-browser: #0d9488;
+  --agent-file: #4d7c0f;
+  --agent-note: #ca8a04;
 }
 
 * { box-sizing: border-box; }
@@ -181,12 +195,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .file-statusbar span:first-child { margin-right: auto; color: #526579; }
 
 .canvas-shell { min-width: 0; min-height: 0; position: relative; overflow: hidden; background: #fff; }
-.canvas-shell .react-flow { background: #fbfcfd; }
+.canvas-shell .react-flow { background: #f7f8f5; }
 .canvas-shell .react-flow__background { opacity: .66; }
 .drawer-toggle { position: absolute; z-index: 11; top: 10px; left: 10px; width: 30px; height: 30px; display: none; place-items: center; border: 1px solid var(--border); border-radius: 7px; background: #fff; box-shadow: var(--shadow-xs); cursor: pointer; }
 .drawer-toggle:hover { border-color: var(--border-strong); background: var(--surface-subtle); }
 .react-flow__node { font-family: Inter, sans-serif; }
 .react-flow__node:focus { outline: none; }
+.react-flow__node:focus-visible { outline: 2px solid #2868d8; outline-offset: 3px; border-radius: 10px; }
 .react-flow__node-agent { width: 390px; }
 .react-flow__node-browser { width: 470px; }
 .react-flow__node-file { width: 190px; }
@@ -264,6 +279,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 
 .flow-node { width: 100%; height: 100%; min-width: 0; min-height: 0; border: 1px solid #b7bec7; border-radius: 8px; background: #fff; color: #20242a; box-shadow: 0 2px 7px rgba(25, 31, 38, .055); overflow: visible; transition: border-color .15s, box-shadow .15s; }
+.flow-node:hover { border-color: color-mix(in srgb, var(--accent, #7f8b99) 38%, #aab4bf); }
 .flow-node.selected { border-color: var(--accent, var(--blue)); box-shadow: 0 0 0 1px var(--accent, var(--blue)), 0 4px 13px rgba(21, 70, 126, .09); }
 .flow-node header { min-height: 42px; flex: 0 0 42px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid #ebedf0; user-select: none; }
 .node-resize-handle { width: 9px !important; height: 9px !important; z-index: 6; border: 2px solid #fff !important; border-radius: 50% !important; box-shadow: 0 0 0 1px #2868d8; }
@@ -298,12 +314,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .node-title { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
 .node-title svg { color: var(--accent, var(--blue)); flex: 0 0 auto; }
 .node-title > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.node-role { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; padding: 2px 6px; border: 1px solid #d9e3ef; border-radius: 999px; background: #f4f8fd; color: #53677f; font-size: 8px; font-weight: 500; letter-spacing: 0; }
+.node-role { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border: 1px solid #d9e3ef; border-radius: 999px; background: #f4f8fd; color: #53677f; font-size: 8px; font-weight: 500; letter-spacing: 0; }
+.node-role svg { flex: 0 0 auto; }
 .node-status { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 9px; white-space: nowrap; }
 .node-status i { width: 7px; height: 7px; border-radius: 50%; display: block; background: #9299a2; }
 .node-status.green { color: #277f3e; }.node-status.green i { background: #35a853; }
 .node-status.amber { color: #b56c00; }.node-status.amber i { background: #f0a500; }
 .node-status.blue { color: #176ec8; }.node-status.blue i { background: #2878d4; }
+.node-status.red { color: #b42318; }.node-status.red i { background: #d92d20; }
 .node-close { width: 24px; height: 24px; position: relative; z-index: 10; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: #9097a0; cursor: pointer; }
 .node-close:hover { color: #d33c32; background: #fff0ef; }
 .node-process-actions { display: inline-flex; align-items: center; gap: 2px; }
@@ -338,7 +356,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .file-node b { font-size: 11px; }
 .file-node span, .file-node small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #737c87; font-size: 9px; }
 .file-node .node-close { position: absolute; top: 5px; right: 5px; }
-.file-node > .react-flow__handle { width: 9px; height: 9px; background: var(--blue); border: 1px solid #fff; }
+.file-node > .react-flow__handle { width: 9px; height: 9px; background: var(--accent, var(--blue)); border: 1px solid #fff; }
 
 .note-node { position: relative; min-height: 150px; display: flex; flex-direction: column; }
 .note-node textarea { width: calc(100% - 24px); min-height: 0; flex: 1; resize: none; margin: 10px 12px 27px; padding: 9px; border: 1px solid #dfe3e8; border-radius: 5px; outline: none; font-size: 11px; line-height: 1.45; }

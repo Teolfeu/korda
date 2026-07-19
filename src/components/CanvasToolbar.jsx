@@ -1,19 +1,19 @@
 import {
-  Browser,
+  Compass,
   CursorClick,
   NotePencil,
   Robot,
-  TerminalWindow,
+  Terminal,
   TextT,
 } from "@phosphor-icons/react";
 
 const tools = [
   { id: "select", label: "Selecionar", shortcut: "V", Icon: CursorClick },
-  { id: "terminal", label: "Terminal", shortcut: "T", Icon: TerminalWindow },
+  { id: "terminal", label: "Terminal", shortcut: "T", Icon: Terminal },
   { id: "agent", label: "Agente", shortcut: "A", Icon: Robot },
   { id: "note", label: "Nota", shortcut: "N", Icon: NotePencil },
   { id: "text", label: "Texto", shortcut: "X", Icon: TextT },
-  { id: "browser", label: "Browser", shortcut: "B", Icon: Browser },
+  { id: "browser", label: "Browser", shortcut: "B", Icon: Compass },
 ];
 
 export function CanvasToolbar({ activeTool = "select", onSelect, onAdd }) {

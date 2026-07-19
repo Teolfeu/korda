@@ -1,14 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowClockwise,
-  Brain,
-  Browser,
+  BracketsCurly,
   CheckCircle,
+  Compass,
+  Crown,
+  Cube,
   DotsSixVertical,
-  FileTs,
+  FileCode,
+  Hammer,
+  Lightning,
+  MagnifyingGlass,
+  Moon,
+  NotePencil,
+  PaperPlaneTilt,
   Robot,
+  SealCheck,
+  Sparkle,
+  StarFour,
   Stop,
-  TerminalWindow,
+  Terminal as TerminalIcon,
+  Wrench,
   X,
 } from "@phosphor-icons/react";
 import { FitAddon } from "@xterm/addon-fit";
@@ -26,7 +38,53 @@ import {
 } from "../terminal-session-registry.js";
 import "@xterm/xterm/css/xterm.css";
 
-const tone = { running: "green", waiting: "amber", ready: "blue", idle: "gray" };
+const tone = { running: "green", waiting: "amber", ready: "blue", idle: "gray", exited: "red" };
+
+// Identidade visual por CLI: ícone e cor de cada agente conhecido. As cores
+// são as mesmas dos tokens --agent-* (styles.css) e do dashboard — ao mudar
+// uma cor aqui, mude lá também.
+const cliVisuals = {
+  codex: { Icon: Cube, color: "#7c3aed" },
+  claude: { Icon: Sparkle, color: "#c2410c" },
+  opencode: { Icon: BracketsCurly, color: "#059669" },
+  kimi: { Icon: Moon, color: "#2563eb" },
+  gemini: { Icon: StarFour, color: "#0891b2" },
+  hermes: { Icon: PaperPlaneTilt, color: "#db2777" },
+  grok: { Icon: Lightning, color: "#334155" },
+  aider: { Icon: Wrench, color: "#57534e" },
+};
+const cliKeys = Object.keys(cliVisuals);
+
+// Identidade por tipo de bloco que não é uma CLI específica.
+const typeVisuals = {
+  terminal: { Icon: TerminalIcon, color: "#64748b" },
+  browser: { Icon: Compass, color: "#0d9488" },
+  file: { Icon: FileCode, color: "#4d7c0f" },
+  note: { Icon: NotePencil, color: "#ca8a04" },
+};
+
+// Ícones dos papéis no fluxo (badge do cabeçalho do nó).
+const roleVisuals = {
+  orchestrator: Crown,
+  executor: Hammer,
+  reviewer: SealCheck,
+  researcher: MagnifyingGlass,
+};
+
+function detectCliKey(...candidates) {
+  const haystack = candidates.filter(Boolean).join(" ").toLowerCase();
+  return cliKeys.find((key) => haystack.includes(key)) || null;
+}
+
+// Resolve ícone e cor de um bloco. Prioriza a CLI detectada (kind/agentId/
+// comando), cai para o tipo do bloco e por fim para um agente genérico sem
+// cor própria (que mantém o accent vindo dos dados do nó).
+function nodeVisual({ kind, agentId, command, agentName } = {}) {
+  const cliKey = detectCliKey(kind, agentId, command, agentName);
+  if (cliKey) return { key: cliKey, ...cliVisuals[cliKey] };
+  if (kind && typeVisuals[kind]) return { key: kind, ...typeVisuals[kind] };
+  return { key: "agent", Icon: Robot, color: null };
+}
 
 function NodeClose({ onRemove }) {
   return (
@@ -53,10 +111,9 @@ function Status({ value = "Pronto", statusTone = "ready" }) {
   return <span className={`node-status ${tone[statusTone] || "gray"}`} title={`Estado: ${value}`}><i />{value}</span>;
 }
 
-function NodeIcon({ kind }) {
-  if (kind === "claude") return <Robot size={18} weight="duotone" />;
-  if (kind === "terminal") return <TerminalWindow size={18} />;
-  return <Brain size={18} weight="duotone" />;
+function NodeIcon({ data }) {
+  const { Icon } = nodeVisual(data);
+  return <Icon size={18} weight="duotone" />;
 }
 
 function TerminalPane({ nodeId, feed = "", cwd, command, enabled = true, restartKey = 0, onTerminalSession }) {
@@ -606,14 +663,22 @@ function ResizeHandles({ selected, minWidth, minHeight }) {
 }
 
 export function AgentNode({ id, data, selected }) {
+  const visual = nodeVisual(data);
+  // A cor da CLI vira o acento do card (borda, header, ícone, badge de papel,
+  // cordas); sem CLI conhecida, mantém o accent de papel vindo do App.
+  const accent = visual.color || data.accent || "#1677ff";
+  const RoleIcon = data.role ? roleVisuals[data.role] : null;
+  // Processo encerrado vira ponto vermelho; parado/ocioso segue cinza e o
+  // em execução continua verde — apenas apresentação sobre os dados do nó.
+  const statusTone = data.terminal && data.terminalLifecycle?.status === "exited" ? "exited" : data.statusTone;
   return (
-    <article className={`flow-node agent-node ${selected ? "selected" : ""}`} style={{ "--accent": data.accent || "#1677ff" }}>
+    <article className={`flow-node agent-node ${selected ? "selected" : ""}`} style={{ "--accent": accent }}>
       <ResizeHandles selected={selected} minWidth={560} minHeight={380} />
       <PerimeterHandles id={id} label={data.terminal ? "terminal" : "agente"} />
       <Handle id="input" type="target" position={Position.Top} />
       <header>
-        <span className="node-title"><NodeIcon kind={data.kind} /><span>{data.title}</span>{data.roleLabel && <small className="node-role" title={`Papel: ${data.roleLabel}`}>{data.roleLabel}</small>}</span>
-        <Status value={data.status} statusTone={data.statusTone} />
+        <span className="node-title"><NodeIcon data={data} /><span>{data.title}</span>{data.roleLabel && <small className="node-role" title={`Papel: ${data.roleLabel}`}>{RoleIcon && <RoleIcon size={10} weight="duotone" aria-hidden="true" />}{data.roleLabel}</small>}</span>
+        <Status value={data.status} statusTone={statusTone} />
         {data.terminal && data.cwd && <span className="node-process-actions nodrag" aria-label="Controles do processo"><button type="button" onClick={(event) => { event.stopPropagation(); data.onRestart?.(id); }} aria-label="Reiniciar processo" title="Reiniciar processo"><ArrowClockwise size={13} /></button><button type="button" onClick={(event) => { event.stopPropagation(); data.onStop?.(id); }} aria-label="Parar processo" title="Parar processo"><Stop size={12} weight="fill" /></button></span>}
         <NodeClose onRemove={() => data.onRemove(id)} />
       </header>
@@ -626,11 +691,12 @@ export function AgentNode({ id, data, selected }) {
 }
 
 export function FileNode({ id, data, selected }) {
+  const { Icon, color } = nodeVisual({ kind: "file" });
   return (
-    <article className={`flow-node file-node ${selected ? "selected" : ""}`}>
+    <article className={`flow-node file-node ${selected ? "selected" : ""}`} style={{ "--accent": color }}>
       <PerimeterHandles id={id} label="arquivo" />
       <Handle id="input" type="target" position={Position.Left} />
-      <FileTs size={22} weight="fill" />
+      <Icon size={22} weight="duotone" style={{ color }} />
       <div><b>{data.title}</b><span>{data.path}</span><small>{data.meta}</small></div>
       <NodeClose onRemove={() => data.onRemove(id)} />
     </article>
@@ -648,6 +714,7 @@ export function NoteNode({ id, data, selected }) {
       <PerimeterHandles id={id} label="nota" />
       <Handle id="input" type="target" position={Position.Top} style={{ opacity: 0 }} />
       <NodeDragHandle label="Arrastar nota" />
+      <span className="note-kind-icon" aria-hidden="true"><NotePencil size={13} weight="duotone" /></span>
       <div style={{ position: "absolute", zIndex: 10, top: 5, right: 5 }}><NodeClose onRemove={() => data.onRemove(id)} /></div>
       <textarea
         className="nodrag nowheel"
@@ -804,12 +871,13 @@ export function BrowserNode({ id, data, selected }) {
   const status = {
     connecting: ["Conectando", "waiting"], loading: ["Carregando", "waiting"], ready: [window.kordaDesktop?.isDesktop ? "Conectado" : "Prévia", "running"], error: ["Erro", "idle"], detached: ["Desconectado", "idle"],
   }[browserState];
+  const { Icon: BrowserIcon, color: browserColor } = nodeVisual({ kind: "browser" });
   return (
-    <article className={`flow-node browser-node ${selected ? "selected" : ""}`}>
+    <article className={`flow-node browser-node ${selected ? "selected" : ""}`} style={{ "--accent": browserColor }}>
       <ResizeHandles selected={selected} minWidth={340} minHeight={260} />
       <PerimeterHandles id={id} label="navegador" />
       <Handle id="input" type="target" position={Position.Top} />
-      <header><span className="node-title"><Browser size={19} />{data.title}</span><Status value={status[0]} statusTone={status[1]} /><NodeClose onRemove={() => data.onRemove(id)} /></header>
+      <header><span className="node-title"><BrowserIcon size={19} weight="duotone" />{data.title}</span><Status value={status[0]} statusTone={status[1]} /><NodeClose onRemove={() => data.onRemove(id)} /></header>
       <div className="browser-bar nodrag nowheel"><input value={input} onChange={(event) => editUrl(event.target.value)} onKeyDown={(event) => event.key === "Enter" && navigate()} aria-label="URL do navegador" /><button onClick={navigate} title="Navegar" aria-label="Navegar"><ArrowClockwise size={15} /></button></div>
       <div className="browser-viewport nodrag nowheel" onPointerDown={(event) => event.stopPropagation()}>
         {window.kordaDesktop?.isDesktop ? <webview ref={webviewRef} src={url} /> : <BrowserFallback />}
