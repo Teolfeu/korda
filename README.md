@@ -69,3 +69,7 @@ A árvore do workspace usa observação nativa do sistema de arquivos. Arquivos 
 O Korda executa processos locais com as permissões do usuário. Revise comandos antes de executá-los e use workspaces confiáveis. Consulte [SECURITY.md](./SECURITY.md) para relatar vulnerabilidades.
 
 O código é licenciado sob [Apache License 2.0](./LICENSE). A marca e o logotipo Korda não recebem licença de marca; dependências e fontes mantêm suas próprias licenças em [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+
+## Site
+
+O site público [teolfeu.github.io/korda-site](https://teolfeu.github.io/korda-site/) vive no repositório separado [Teolfeu/korda-site](https://github.com/Teolfeu/korda-site) (React + Vite, publicado via branch `gh-pages`).
