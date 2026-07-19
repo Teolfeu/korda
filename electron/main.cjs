@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const pty = require("node-pty");
 const { fileURLToPath } = require("node:url");
-const { ensureHermesSkill, listInstalledAgents, resolveInstalledAgent } = require("./agent-registry.cjs");
+const { ensureHermesSkill, listInstalledAgents, resolveCommandExecutable, resolveInstalledAgent } = require("./agent-registry.cjs");
 const { createBrowserController } = require("./browser-controller.cjs");
 const { createContextBroker } = require("./context-broker.cjs");
 const { createRunCoordinator } = require("./run-coordinator.cjs");
@@ -375,9 +375,16 @@ function registerIpc() {
     const rows = integer(payload.rows, 30, 1, 200, "Número de linhas");
     const cwd = resolveTerminalCwd(payload.cwd);
     const agent = payload.command === undefined ? null : resolveInstalledAgent(payload.command);
-    if (payload.command !== undefined && !agent) throw new Error("CLI de agente não instalada.");
-    if (agent?.id === "hermes") ensureHermesSkill();
-    const executable = agent?.path || process.env.SHELL || "/bin/bash";
+    // Comando fora dos agentes conhecidos: aceita qualquer executável simples do PATH efetivo.
+    const custom = !agent && payload.command !== undefined ? resolveCommandExecutable(payload.command) : null;
+    if (payload.command !== undefined && !agent && !custom) {
+      throw new Error(
+        typeof payload.command === "string" ? `Comando "${payload.command}" não encontrado no PATH.` : "CLI de agente não instalada.",
+      );
+    }
+    const resolved = agent || custom;
+    if (resolved?.id === "hermes") ensureHermesSkill();
+    const executable = resolved?.path || process.env.SHELL || "/bin/bash";
     const env = Object.fromEntries(Object.entries(process.env).filter(([, item]) => typeof item === "string"));
     env.TERM = "xterm-256color";
     env.COLORTERM = "truecolor";
@@ -394,7 +401,7 @@ function registerIpc() {
       env.OPENCODE_CONFIG_CONTENT = kordaOpenCodeConfig(env.OPENCODE_CONFIG_CONTENT);
     }
 
-    const command = agent?.command || path.basename(executable);
+    const command = resolved?.command || path.basename(executable);
     const metrics = createTerminalMetrics({ id, command, cwd, cols, rows });
     const terminal = {
       pty: null,
@@ -402,7 +409,7 @@ function registerIpc() {
       cwd,
       cols,
       rows,
-      command: agent?.command || null,
+      command: resolved?.command || null,
       buffer: "",
       sequence: 0,
       closed: false,
@@ -431,7 +438,7 @@ function registerIpc() {
       spawnGatedPty({
         pty,
         executable,
-        args: agent?.args || [],
+        args: resolved?.args || [],
         spawnOptions: { name: "xterm-256color", cols, rows, cwd, env },
         gateDirectory: connection.spoolDir,
         onSpawn: (processPty) => {
