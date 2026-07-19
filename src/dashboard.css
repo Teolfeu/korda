@@ -1,0 +1,286 @@
+/* Dashboard (visão alternativa ao canvas) — todo o CSS desta visão fica neste arquivo. */
+
+/* Controle segmentado Canvas ⇄ Dashboard no topbar */
+.kdb-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+}
+.kdb-view-toggle > button {
+  height: 25px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .14s ease, color .14s ease, box-shadow .14s ease;
+}
+.kdb-view-toggle > button:hover { color: var(--text); }
+.kdb-view-toggle > button.active {
+  background: #fff;
+  color: var(--text);
+  box-shadow: var(--shadow-xs), 0 0 0 1px rgba(221, 225, 230, .9);
+}
+.kdb-view-toggle > button > svg { color: #8a95a1; }
+.kdb-view-toggle > button.active > svg { color: #2868d8; }
+
+/* Camada do dashboard sobre o canvas-shell (o React Flow continua montado abaixo) */
+.kdb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  overflow-y: auto;
+  background: #f7f8f5;
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+}
+.kdb-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px 26px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Cabeçalho da página */
+.kdb-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.kdb-header h1 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -.02em;
+}
+.kdb-header h1 > svg { color: #4b5563; }
+.kdb-header p { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; }
+.kdb-header p b { color: #334155; font-weight: 650; }
+.kdb-header-actions { display: flex; align-items: center; gap: 8px; }
+
+.kdb-button {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  color: #374151;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+.kdb-button:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.kdb-button.primary { border-color: #176be0; background: #176ee7; color: #fff; box-shadow: 0 3px 8px rgba(22, 119, 255, .2); }
+.kdb-button.primary:hover { background: #1565d8; border-color: #0f5fc8; }
+
+/* Painéis de missão e uso */
+.kdb-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 13px; }
+.kdb-panel {
+  border: 1px solid #e4e7ea;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.kdb-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kdb-panel > header h2 { margin: 0; display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 650; letter-spacing: .01em; }
+.kdb-panel > header h2 > svg { color: #6b7280; }
+.kdb-panel > header small { color: var(--muted); font-size: 10px; }
+.kdb-panel-note { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+.kdb-mission-state { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .03em; }
+.kdb-mission-state > i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.kdb-mission-state.active { color: #15803d; }
+.kdb-mission-state.active > i { box-shadow: 0 0 0 3px rgba(53, 168, 83, .14); }
+.kdb-mission-state.done { color: #64748b; }
+.kdb-mission-state.error { color: #b91c1c; }
+.kdb-mission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 7px; }
+.kdb-mission-grid > div { border: 1px solid #eceff2; border-radius: 7px; background: var(--surface-subtle); padding: 6px 8px; }
+.kdb-mission-grid b { display: block; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.kdb-mission-grid small { color: var(--muted); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
+.kdb-mission-final { margin: 0; font-size: 11px; color: #374151; line-height: 1.45; border-left: 3px solid #d7dce2; padding-left: 9px; }
+
+.kdb-usage-list { display: flex; flex-direction: column; gap: 6px; }
+.kdb-usage-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11.5px; }
+.kdb-usage-row > span { display: inline-flex; align-items: center; gap: 7px; color: #374151; min-width: 0; }
+.kdb-usage-row > span > i { width: 8px; height: 8px; border-radius: 3px; flex: 0 0 auto; }
+.kdb-usage-row b { font-variant-numeric: tabular-nums; font-weight: 650; }
+.kdb-usage-row small { color: var(--muted); font-size: 10px; }
+.kdb-usage-empty { margin: 0; color: var(--muted); font-size: 11px; }
+
+/* Grade de cards */
+.kdb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 13px; }
+.kdb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 13px 14px 12px;
+  border: 1px solid #e3e7ea;
+  border-top: 3px solid var(--kdb-accent, #64748b);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(18, 25, 38, .06);
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.kdb-card:hover { box-shadow: 0 5px 16px rgba(18, 25, 38, .09); }
+.kdb-card > header { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kdb-card-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  color: var(--kdb-accent, #64748b);
+  background: color-mix(in srgb, var(--kdb-accent, #64748b) 11%, #fff);
+  border: 1px solid color-mix(in srgb, var(--kdb-accent, #64748b) 26%, #fff);
+}
+.kdb-card-title { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.kdb-card-title > b { font-size: 13px; font-weight: 650; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kdb-card-title > small { color: var(--muted); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.kdb-status { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .02em; }
+.kdb-status > i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.kdb-status.green { color: #15803d; background: #eef9f0; border: 1px solid #cdeed4; }
+.kdb-status.green > i { box-shadow: 0 0 0 2px rgba(53, 168, 83, .16); }
+.kdb-status.gray { color: #5b6470; background: #f1f4f7; border: 1px solid #e0e5ea; }
+.kdb-status.red { color: #b91c1c; background: #fdf0ef; border: 1px solid #f6d4d0; }
+.kdb-status.amber { color: #92610a; background: #fdf7ea; border: 1px solid #f3e3bd; }
+
+.kdb-role {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--kdb-accent, #64748b);
+  background: color-mix(in srgb, var(--kdb-accent, #64748b) 9%, #fff);
+  border: 1px solid color-mix(in srgb, var(--kdb-accent, #64748b) 24%, #fff);
+}
+
+.kdb-card dl { margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.kdb-card dl > div { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.kdb-card dt { flex: 0 0 58px; color: var(--muted); font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.kdb-card dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  color: #374151;
+}
+
+.kdb-card-metrics { display: flex; gap: 6px; flex-wrap: wrap; }
+.kdb-card-metrics > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid #eceff2;
+  border-radius: 6px;
+  background: var(--surface-subtle);
+  color: #4b5563;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.kdb-card-metrics > span > svg { color: #9aa3ad; }
+.kdb-card-metrics > span > b { font-weight: 650; }
+
+.kdb-card-feed {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-left: 3px solid color-mix(in srgb, var(--kdb-accent, #64748b) 45%, #fff);
+  border-radius: 0 6px 6px 0;
+  background: #fafbfc;
+  color: #4b5563;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+.kdb-card-feed > svg { flex: 0 0 auto; color: #9aa3ad; transform: translateY(1.5px); }
+.kdb-card-feed > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; }
+
+.kdb-card-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 2px; }
+.kdb-card-actions > button {
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease, color .14s ease;
+}
+.kdb-card-actions > button:hover { background: var(--surface-hover); border-color: var(--border-strong); color: var(--text); }
+.kdb-card-actions > button:disabled { opacity: .45; cursor: not-allowed; }
+.kdb-card-actions > button.kdb-focus { color: #1d4ed8; border-color: #c8dbfa; background: #f4f8ff; }
+.kdb-card-actions > button.kdb-focus:hover { background: #e9f1fe; border-color: #a9c6f7; }
+.kdb-card-actions > button.kdb-stop:hover { color: #b91c1c; border-color: #f0c6c1; background: #fdf3f2; }
+.kdb-card-actions > span { flex: 1; }
+
+/* Estado vazio */
+.kdb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 58px 20px 62px;
+  border: 1px dashed #d8dde2;
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+}
+.kdb-empty > .kdb-empty-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #4b5563;
+  background: #f1f4f6;
+  border: 1px solid #e4e8eb;
+}
+.kdb-empty > b { font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.kdb-empty > p { margin: 0; max-width: 420px; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+.kdb-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+
+@media (max-width: 760px) {
+  .kdb-shell { padding: 16px 14px 32px; }
+  .kdb-view-toggle > button { padding: 0 7px; }
+  .kdb-view-toggle > button > span { display: none; }
+}

@@ -15,6 +15,7 @@ import {
   ShareNetwork,
   SidebarSimple,
   SlidersHorizontal,
+  SquaresFour,
   TerminalWindow,
   TreeStructure,
   X,
@@ -49,6 +50,7 @@ import { MetricsView } from "./components/MetricsView.jsx";
 import { OrchestrationView } from "./components/OrchestrationView.jsx";
 import { OnboardingGuide } from "./components/OnboardingGuide.jsx";
 import { WorkbenchDeck, WorkspaceExplorer } from "./components/WorkspaceWorkbench.jsx";
+import { DashboardView } from "./components/DashboardView.jsx";
 import {
   appendExecutionEvent,
   finishExecutionRun,
@@ -65,6 +67,7 @@ import { createTerminalLifecycle, transitionTerminalLifecycle } from "./terminal
 import { readWorkspaceState, saveWorkspaceState, workspaceScopeId } from "./workspace-state.js";
 import { markOnboardingSeen, shouldShowOnboarding } from "./onboarding-state.js";
 import "./brand-polish.css";
+import "./dashboard.css";
 
 const nodeTypes = { agent: AgentNode, browser: BrowserNode, file: FileNode, note: NoteNode };
 const edgeTypes = { gravity: GravityEdge };
@@ -243,6 +246,8 @@ export function App() {
   });
   const [openDocuments, setOpenDocuments] = useState([]);
   const [activeView, setActiveView] = useState("canvas");
+  // Visão principal: canvas (padrão) ou dashboard. Persistida entre sessões.
+  const [viewMode, setViewMode] = useState(() => window.localStorage?.getItem("korda-view-mode") === "dashboard" ? "dashboard" : "canvas");
   const [running, setRunning] = useState(false);
   const [edgeActivities, setEdgeActivities] = useState([]);
   const [activeTool, setActiveTool] = useState("Canvas");
@@ -301,6 +306,10 @@ export function App() {
   useEffect(() => {
     window.localStorage?.setItem("korda-explorer-width", String(explorerWidth));
   }, [explorerWidth]);
+
+  useEffect(() => {
+    window.localStorage?.setItem("korda-view-mode", viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     if (!openDocuments.some((document) => document.content !== document.savedContent)) return undefined;
@@ -511,6 +520,19 @@ export function App() {
     setSelectedEdgeId(id);
     setSelectedId(null);
   }, []);
+
+  // Ação do dashboard: volta à visão canvas com o nó selecionado (mesmo efeito de clicar nele).
+  const focusNodeOnCanvas = useCallback((nodeId) => {
+    setViewMode("canvas");
+    setActiveView("canvas");
+    setActiveTool("Canvas");
+    setStatsOpen(false);
+    setOrchestrationOpen(false);
+    setSelectedEdgeId(null);
+    setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
+    setSelectedId(nodeId);
+    setInspectorOpen(true);
+  }, [setNodes]);
 
   const onTerminalSession = useCallback((nodeId, sessionId, detail) => {
     const previous = terminalSessions.current.get(nodeId);
@@ -812,6 +834,11 @@ export function App() {
         setCanvasTool("select");
         return;
       }
+      // Tecla "d": alterna entre as visões Canvas e Dashboard.
+      if (event.key.toLowerCase() === "d") {
+        setViewMode((mode) => (mode === "dashboard" ? "canvas" : "dashboard"));
+        return;
+      }
       if (!kind) return;
       event.preventDefault();
       handleAdd(kind);
@@ -826,6 +853,7 @@ export function App() {
     setStatsOpen(false);
     setOrchestrationOpen(false);
     if (tool === "Canvas") {
+      setViewMode("canvas");
       setActiveView("canvas");
       setInspectorOpen(false);
       return;
@@ -1071,6 +1099,10 @@ export function App() {
         <button className="project-button" onClick={pickWorkspace} disabled={running} title={workspace.root || workspace.name}><FolderOpen size={15} /><span>{workspace.name}</span><CaretDown size={12} /></button>
         <span className="branch-meta"><i />{workspaceWatchError ? "Atualização pausada" : workspaceReady ? "Pasta ao vivo" : "Sem pasta"}</span>
       </div>
+      <div className="kdb-view-toggle" role="tablist" aria-label="Alternar visão">
+        <button type="button" role="tab" aria-selected={viewMode === "canvas"} className={viewMode === "canvas" ? "active" : ""} onClick={() => setViewMode("canvas")} title="Visão de canvas — tecla D alterna"><ShareNetwork size={15} weight={viewMode === "canvas" ? "fill" : "regular"} /><span>Canvas</span></button>
+        <button type="button" role="tab" aria-selected={viewMode === "dashboard"} className={viewMode === "dashboard" ? "active" : ""} onClick={() => setViewMode("dashboard")} title="Visão de dashboard — tecla D alterna"><SquaresFour size={15} weight={viewMode === "dashboard" ? "fill" : "regular"} /><span>Dashboard</span></button>
+      </div>
       <div className="topbar-actions">
         <div className="run-metrics" aria-label="Resumo do workspace">
           <span title={`${agentPtys} agentes com terminal ativo`}><Robot size={14} /><b className="green-text">{agentPtys}</b><small>agentes</small></span>
@@ -1087,7 +1119,7 @@ export function App() {
     <div className={`workbench ${drawerOpen ? "drawer-open" : ""} ${inspectorOpen ? "inspector-open" : ""}`} style={{ "--explorer-width": `${explorerWidth}px` }}>
       <Rail active={activeTool} onSelect={handleTool} onHelp={() => setOnboardingOpen(true)} />
       {drawerOpen && <WorkspaceExplorer name={workspace.name} root={workspace.root} ready={workspaceReady} tree={workspace.tree} watchError={workspaceWatchError} activePath={activeView} onPick={pickWorkspace} onOpenFile={openWorkspaceFile} onResizeStart={resizeExplorer} />}
-      <WorkbenchDeck documents={openDocuments} activeView={activeView} onActivate={(view) => { setActiveView(view); if (view === "canvas") setActiveTool("Canvas"); }} onClose={closeWorkspaceFile} onChange={changeWorkspaceFile} onSave={saveWorkspaceFile} onReload={reloadWorkspaceFile} canvas={<section className="canvas-shell"><button className="drawer-toggle" onClick={() => setDrawerOpen((value) => !value)} title="Alternar workspace" aria-label="Alternar painel do workspace"><SidebarSimple size={17} /></button>{runtimeNotice && <span role="status" style={{ position: "absolute", zIndex: 12, top: 62, right: 14, maxWidth: 380, padding: "7px 10px", border: "1px solid #fed7aa", borderRadius: 6, background: "#fff7ed", color: "#9a3412", fontSize: 11, boxShadow: "0 2px 8px rgba(20, 26, 33, .06)" }}>{runtimeNotice}</span>}{selectedEdgeId && edges.some((edge) => edge.id === selectedEdgeId) && <button type="button" className="remove-cord" onClick={removeSelectedEdge} disabled={running} aria-label="Remover corda selecionada"><X size={13} />Remover corda</button>}<CanvasToolbar activeTool={canvasTool} onSelect={setCanvasTool} onAdd={(kind) => { handleAdd(kind); setCanvasTool("select"); }} /><ReactFlow nodes={renderedNodes} edges={renderedEdges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onInit={(instance) => { if (nodes.length > 0) window.setTimeout(() => void instance.fitView({ includeHiddenNodes: true, padding: { top: "8%", right: "8%", bottom: "8%", left: "8%" }, minZoom: 0.65 }), 0); }} connectionMode={ConnectionMode.Loose} selectionOnDrag panOnDrag={[1, 2]} isValidConnection={({ source, target }) => source !== target} onNodeClick={(_, node) => { setSelectedEdgeId(null); setSelectedId(node.id); setStatsOpen(false); setOrchestrationOpen(false); setInspectorOpen(true); setActiveTool("Canvas"); }} onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedId(null); }} onPaneClick={() => { setSelectedEdgeId(null); setSelectedId(null); }} onBeforeDelete={beforeDelete} onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))} defaultViewport={startsCompact ? { x: 0, y: 0, zoom: 1 } : undefined} minZoom={0.35} maxZoom={1.6} deleteKeyCode={["Backspace", "Delete"]} connectionLineStyle={{ stroke: "#8d939a", strokeWidth: 1.7, strokeDasharray: "7 6" }}><Background variant={BackgroundVariant.Lines} gap={20} size={1} color="#e4e8ed" /><CanvasControls /></ReactFlow>{statsOpen && <MetricsView nodes={nodes} edges={edges} sessionBindings={sessionBindings} activity={localActivity} workspaceName={workspace.name} workspaceRoot={workspace.root} preview={!window.kordaDesktop?.isDesktop} onClose={() => { setStatsOpen(false); setActiveTool("Canvas"); }} />}{orchestrationOpen && <OrchestrationView ledger={executionLedger} workspaceId={activeWorkspaceId} workspaceName={workspace.name} preview={!window.kordaDesktop?.isDesktop} onClose={() => { setOrchestrationOpen(false); setActiveTool("Canvas"); }} />}{nodes.length === 0 && !statsOpen && !orchestrationOpen && !agentDialogOpen && !inspectorOpen && <EmptyCanvas onOpenWorkspace={pickWorkspace} onAddAgent={() => void openAgentDialog("agent")} onAddTerminal={() => void openAgentDialog("terminal")} onOpenGuide={() => setOnboardingOpen(true)} />}</section>} />
+      <WorkbenchDeck documents={openDocuments} activeView={activeView} onActivate={(view) => { setActiveView(view); if (view === "canvas") setActiveTool("Canvas"); }} onClose={closeWorkspaceFile} onChange={changeWorkspaceFile} onSave={saveWorkspaceFile} onReload={reloadWorkspaceFile} canvas={<section className="canvas-shell"><button className="drawer-toggle" onClick={() => setDrawerOpen((value) => !value)} title="Alternar workspace" aria-label="Alternar painel do workspace"><SidebarSimple size={17} /></button>{runtimeNotice && <span role="status" style={{ position: "absolute", zIndex: 12, top: 62, right: 14, maxWidth: 380, padding: "7px 10px", border: "1px solid #fed7aa", borderRadius: 6, background: "#fff7ed", color: "#9a3412", fontSize: 11, boxShadow: "0 2px 8px rgba(20, 26, 33, .06)" }}>{runtimeNotice}</span>}{selectedEdgeId && edges.some((edge) => edge.id === selectedEdgeId) && <button type="button" className="remove-cord" onClick={removeSelectedEdge} disabled={running} aria-label="Remover corda selecionada"><X size={13} />Remover corda</button>}<CanvasToolbar activeTool={canvasTool} onSelect={setCanvasTool} onAdd={(kind) => { handleAdd(kind); setCanvasTool("select"); }} /><ReactFlow nodes={renderedNodes} edges={renderedEdges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onInit={(instance) => { if (nodes.length > 0) window.setTimeout(() => void instance.fitView({ includeHiddenNodes: true, padding: { top: "8%", right: "8%", bottom: "8%", left: "8%" }, minZoom: 0.65 }), 0); }} connectionMode={ConnectionMode.Loose} selectionOnDrag panOnDrag={[1, 2]} isValidConnection={({ source, target }) => source !== target} onNodeClick={(_, node) => { setSelectedEdgeId(null); setSelectedId(node.id); setStatsOpen(false); setOrchestrationOpen(false); setInspectorOpen(true); setActiveTool("Canvas"); }} onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedId(null); }} onPaneClick={() => { setSelectedEdgeId(null); setSelectedId(null); }} onBeforeDelete={beforeDelete} onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))} defaultViewport={startsCompact ? { x: 0, y: 0, zoom: 1 } : undefined} minZoom={0.35} maxZoom={1.6} deleteKeyCode={["Backspace", "Delete"]} connectionLineStyle={{ stroke: "#8d939a", strokeWidth: 1.7, strokeDasharray: "7 6" }}><Background variant={BackgroundVariant.Lines} gap={20} size={1} color="#e4e8ed" /><CanvasControls /></ReactFlow>{viewMode === "dashboard" && !statsOpen && !orchestrationOpen && <DashboardView nodes={nodes} sessionBindings={sessionBindings} mission={missionSnapshot} workspaceName={workspace.name} preview={!window.kordaDesktop?.isDesktop} onFocusNode={focusNodeOnCanvas} onRestart={restartTerminal} onStop={stopTerminal} onAddAgent={() => void openAgentDialog("agent")} onAddTerminal={() => void openAgentDialog("terminal")} onOpenWorkspace={pickWorkspace} />}{statsOpen && <MetricsView nodes={nodes} edges={edges} sessionBindings={sessionBindings} activity={localActivity} workspaceName={workspace.name} workspaceRoot={workspace.root} preview={!window.kordaDesktop?.isDesktop} onClose={() => { setStatsOpen(false); setActiveTool("Canvas"); }} />}{orchestrationOpen && <OrchestrationView ledger={executionLedger} workspaceId={activeWorkspaceId} workspaceName={workspace.name} preview={!window.kordaDesktop?.isDesktop} onClose={() => { setOrchestrationOpen(false); setActiveTool("Canvas"); }} />}{nodes.length === 0 && !statsOpen && !orchestrationOpen && !agentDialogOpen && !inspectorOpen && <EmptyCanvas onOpenWorkspace={pickWorkspace} onAddAgent={() => void openAgentDialog("agent")} onAddTerminal={() => void openAgentDialog("terminal")} onOpenGuide={() => setOnboardingOpen(true)} />}</section>} />
       {inspectorOpen && <Inspector node={selected} onClose={() => setInspectorOpen(false)} onChange={updateSelected} onRoleChange={(role) => selectedId && changeAgentRole(selectedId, role)} onResize={resizeSelected} onRemove={removeNode} />}
     </div>
     <QuickStartDialog open={agentDialogOpen} mode={launchMode} agents={availableAgents} loading={agentsLoading} error={agentError} preview={agentPreview} selectedAgentId={selectedAgentId} selectedRole={selectedRole} command={launchCommand} title={launchTitle} onSelectAgent={setSelectedAgentId} onSelectRole={setSelectedRole} onCommandChange={setLaunchCommand} onTitleChange={setLaunchTitle} onModeChange={changeLaunchMode} onClose={closeAgentDialog} onConfirm={confirmAgent} />
